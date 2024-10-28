@@ -1,19 +1,20 @@
-from scrapy import Spider
-
-from scrapy.http import Response, Request, TextResponse
-
-from urllib.parse import parse_qsl, urlparse, urlencode
+from typing import Optional
+from urllib.parse import parse_qsl, urlencode, urlparse
 
 from nested_data_helper.navigation import navigate
+from scrapy import Spider
+from scrapy.http import Request, Response, TextResponse
 
 
 class RHSSpider(Spider):
     name: str = "rhs"
 
+    separator: str = ","
+    plants: Optional[str] = None
+
     def start_requests(self):
-        if plants := getattr(self, "plants", None):
-            seperator = getattr(self, "seperator", ",")
-            for plant in plants.split(seperator):
+        if plants := self.plants:
+            for plant in plants.split(self.separator):
                 yield self.get_plant_search_request(plant)
 
     def get_plant_search_request(self, search_query):
