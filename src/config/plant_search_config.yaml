@@ -1,0 +1,10 @@
+ops:
+  rhs_plants_info:
+    config:
+      plants:
+        - pear
+        - apple
+        - fig
+        - kale
+        - cauliflower
+        - marigold

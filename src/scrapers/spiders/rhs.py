@@ -10,12 +10,19 @@ class RHSSpider(Spider):
     name: str = "rhs"
 
     separator: str = ","
-    plants: Optional[str] = None
+    plants: Optional[str] | list[str] = None
 
     def start_requests(self):
-        if plants := self.plants:
-            for plant in plants.split(self.separator):
-                yield self.get_plant_search_request(plant)
+        match self.plants:
+            case None:
+                plants = []
+            case x if isinstance(x, str):
+                plants = x.split(self.separator)
+            case x if isinstance(x, list):
+                plants = x
+
+        for plant in plants:
+            yield self.get_plant_search_request(plant)
 
     def get_plant_search_request(self, search_query):
         return Request(
@@ -126,21 +133,20 @@ class RHSSpider(Spider):
             './/h6[contains(text(), "Hardiness")]/following-sibling::span/text()'
         ).getall()
 
-        colour_scent_table = response.xpath(
+        if colour_scent_table := response.xpath(
             './/*[@class="plant-attributes__header"][contains(.//text(), "Colour & scent")]/'
             "following-sibling::div//table"
-        )
+        ):
+            headers_row, *rows = colour_scent_table.xpath("tbody/tr")
 
-        headers_row, *rows = colour_scent_table.xpath("tbody/tr")
-
-        headers = headers_row.xpath("td/text()").getall()
-        plant["colour_and_scents"] = {
-            row.xpath("th/text()").get(): {
-                header: list(map(str.strip, td.xpath(".//text()").getall()))
-                for header, td in zip(headers, row.xpath("td"))
+            headers = headers_row.xpath("td/text()").getall()
+            plant["colour_and_scents"] = {
+                row.xpath("th/text()").get(): {
+                    header: list(map(str.strip, td.xpath(".//text()").getall()))
+                    for header, td in zip(headers, row.xpath("td"))
+                }
+                for row in rows
             }
-            for row in rows
-        }
 
         # Section: Botanical details
         def parse_botanical_details(title: str) -> str:
