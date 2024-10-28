@@ -1,2 +1,4 @@
 dagster ~= 1.8.11
 dagster-webserver ~= 1.8.11
+scrapy
+nested_data_helper
